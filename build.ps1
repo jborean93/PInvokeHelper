@@ -47,13 +47,13 @@ if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne "Trusted") {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 }
 
-#Resolve-Module -Name Psake
-#Resolve-Module -Name PSDeploy
-#Resolve-Module -Name Pester
-#Resolve-Module -Name BuildHelpers
-#Resolve-Module -Name PsScriptAnalyzer
+Resolve-Module -Name Psake
+Resolve-Module -Name PSDeploy
+Resolve-Module -Name Pester
+Resolve-Module -Name BuildHelpers
+Resolve-Module -Name PsScriptAnalyzer
 
-#Set-BuildEnvironment
+Set-BuildEnvironment
 
 Invoke-psake .\psake.ps1
 exit ( [int]( -not $psake.build_success ) )

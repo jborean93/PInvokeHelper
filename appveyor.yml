@@ -5,9 +5,6 @@ environment:
 
 image: Visual Studio 2017
 
-# specify the cloned folder in upper case so the PSGallery upload is in this format
-clone_folder: c:\projects\PInvokeHelper
-
 # Skip on updates to the readme.
 skip_commits:
   files:
@@ -16,5 +13,24 @@ skip_commits:
 
 build: false
 
+install:
+- cmd: choco.exe install codecov --yes
+
 test_script:
-- ps: . .\build.ps1
+- ps: . ./build.ps1
+- pwsh: . ./build.ps1
+- ps: Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags AppVeyor
+
+before_deploy:
+# Deploys the nupkg to PSGallery
+- ps: Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags Release
+
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: 5xLTg9M5bqlSITC5gJHWUD4wOqP1QPsjMQSTiWdCZI68Iflp3lemZ9Au5riRvbZl
+  artifact: /.*\.nupkg/
+  force_update: true
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: true

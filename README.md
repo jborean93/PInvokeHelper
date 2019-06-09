@@ -2,6 +2,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/00i9wmp0awo535a6?svg=true)](https://ci.appveyor.com/project/jborean93/pinvokehelper)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PInvokeHelper.svg)](https://www.powershellgallery.com/packages/PInvokeHelper)
+[![codecov](https://codecov.io/gh/jborean93/PInvokeHelper/branch/master/graph/badge.svg)](https://codecov.io/gh/jborean93/PInvokeHelper)
 
 Various cmdlets that can be used to dynamically define C# structs and methods for
 [PInvoking](https://docs.microsoft.com/en-us/cpp/dotnet/how-to-call-native-dlls-from-managed-code-using-pinvoke?view=vs-2019)
@@ -63,7 +64,6 @@ try {
 These cmdlets have the following requirements
 
 * PowerShell v3.0 or newer
-* Windows PowerShell (not PowerShell Core)
 * Windows Server 2008 R2/Windows 7 or newer
 
 
@@ -88,16 +88,47 @@ If you wish to remove the module, just run
 `Uninstall-Module -Name PInvokeHelper`.
 
 If you cannot use PowerShellGet, you can still install the module manually,
-here are some basic steps on how to do this;
+by using the script cmdlets in the script [Install-ModuleNupkg.ps1](https://gist.github.com/jborean93/e0cb0e3aabeaa1701e41f2304b023366).
 
-1. Download the latext zip from GitHub [here](https://github.com/jborean93/PInvokeHelper/releases/latest)
-2. Extract the zip
-3. Copy the folder `PInvokeHelper` inside the zip to a path that is set in `$env:PSModulePath`. By default this could be `C:\Program Files\WindowsPowerShell\Modules` or `C:\Users\<user>\Documents\WindowsPowerShell\Modules`
-4. Reopen PowerShell and unblock the downloaded files with `$path = (Get-Module -Name PInvokeHelper -ListAvailable).ModuleBase; Unblock-File -Path $path\*.psd1;`
-5. Reopen PowerShell one more time and you can start using the cmdlets
+```powershell
+# Enable TLS1.1/TLS1.2 if they're available but disabled (eg. .NET 4.5)
+$security_protocols = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::SystemDefault
+if ([Net.SecurityProtocolType].GetMember("Tls11").Count -gt 0) {
+    $security_protocols = $security_protocols -bor [Net.SecurityProtocolType]::Tls11
+}
+if ([Net.SecurityProtocolType].GetMember("Tls12").Count -gt 0) {
+    $security_protocols = $security_protocols -bor [Net.SecurityProtocolType]::Tls12
+}
+[Net.ServicePointManager]::SecurityProtocol = $security_protocols
 
-_Note: You are not limited to installing the module to those example paths, you can add a new entry to the environment variable `PSModulePath` if you want to use another path._
+# Run the script to load the cmdlets and get the URI of the nupkg
+$invoke_wr_params = @{
+    Uri = 'https://gist.github.com/jborean93/e0cb0e3aabeaa1701e41f2304b023366/raw/Install-ModuleNupkg.ps1'
+    UseBasicParsing = $true
+}
+$install_script = (Invoke-WebRequest @invoke_wr_params).Content
 
+################################################################################################
+# Make sure you check the script at the URI first and are happy with the script before running #
+################################################################################################
+Invoke-Expression -Command $install_script
+
+# Get the URI to the nupkg on the gallery
+$gallery_uri = Get-PSGalleryNupkgUri -Name PInvokeHelper
+
+# Install the nupkg for the current user, add '-Scope AllUsers' to install
+# for all users (requires admin privileges)
+Install-PowerShellNupkg -Uri $gallery_uri
+```
+
+_Note: I can't stress this enough, make sure you review the script specified by Uri` before running the above_
+
+If you wish to remove a module installed with the above method you can run;
+
+```powershell
+$module_path = (Get-Module -Name PInvokeHelper -ListAvailable).ModuleBase
+Remove-Item -LiteralPath $module_path -Force -Recurse
+```
 
 ## Contributing
 
@@ -107,7 +138,3 @@ PowerShell. This script will ensure all dependencies are installed before
 running the test suite.
 
 _Note: this requires PowerShellGet or WMF 5 to be installed_
-
-## Backlog
-
-* Fix up doc generation to product a correct markdown file

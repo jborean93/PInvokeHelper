@@ -3,7 +3,7 @@
 
 @{
     RootModule = 'PInvokeHelper.psm1'
-    ModuleVersion = '0.1.0'
+    ModuleVersion = '0.2.0'
     GUID = 'c21db2a6-c5f6-4589-b618-babe8d378bfd'
     Author = 'Jordan Borean'
     Copyright = 'Copyright (c) 2019 by Jordan Borean, Red Hat, licensed under MIT.'
